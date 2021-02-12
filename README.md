@@ -42,51 +42,21 @@ well as the necessary documents related to the management of the project.
 * At all times, the robot must not partake in actions that might cause harm or disrespect to any personal, property, or itself.
 
 ### 3.2 List of activities that meet the requirements
-A. Remote API function that can initiate the robot to enter operating mode
-B. Remote API function that can instruct the robot to leave operating mode
-C. Implement a vision and proximity sensor group to detect left and right
-boundaries of operation. These sensors will do the job sensing the
-boundary of the path the robot will take during the operation.
-D. Implement multiple layers of optical and ultrasonic proximity sensors at the
-front and rear of the robot for obstacle detection and collision avoidance
-purposes. Each of these sensors are situated deeper into their own
-heated tubes in order to prevent them from being blocked by clogged or
-built up snow or ice. Multiple obstacle detection sensor phenomenon
-(optical & ultrasonic) is used for each segmented angle to maximize
-sensor redundancy so the operational safety is enhanced.
-E. Implement a suitable snow texture in the simulation environment
-F. Implement a snow texture detection policy within the robot
-G. Implement a suitable tarmac texture in the simulation environment
-H. Implement a tarmac texture detection policy within the robot
-I. The robot is built with a powertrain that consists of two electric revolute
-joints which could independently drive both of the rear wheels in both
-forward and reverse directions. The angular velocity of the revolute joints
-is independently controlled by the system so the orientation and the speed
-of the robot can be adjusted as required.
-J. Implement the front wheel pair so they are free to rotate in any direction
-such that they could support the rear powertrain control and maintain the
-stability of the structure.
-K. Implement a rotating blade auger assembly at the front of the robot so it
-could collect the snow and crack the ice before pushing them into the
-rotating blade impeller assembly which is located behind the auger
-assembly. The auger blades and impeller blades are both driven by two
-independent revolute joints which could be controlled by the system. The
-auger blades rotate about the left-right horizontal axis and the impeller
-blades rotate about the front-rear horizontal axis.
-L. Install a chute assembly at a 30 degrees slant from the vertical axis above
-the impeller mechanism so the impeller could throw the snow forcefully
-through it. The chute is driven by a revolute joint so that it could be rotated
-about the vertical axis between -135 and +135 degrees. A wider chute
-angle is chosen so the robot could throw the snow equally into a wider
-area within a specified perimeter. This is to prevent building up a snow hill
-in the front yard that often causes poor visibility for drivers.
-M. The tip of the chute is attached with a horizontally rotatable cap that could
-be driven by a revolute joint so the snow throwing target distance could be
-controlled by adjusting its angle between +45 and +90 degrees. The
-farthest target distance is achieved by setting this cap at +45 degrees
-angle.
-N. Implement obstruction response from the robot to the client with
-appropriate error messaging
+* Remote API function that can initiate the robot to enter operating mode
+* Remote API function that can instruct the robot to leave operating mode
+* Implement a vision and proximity sensor group to detect left and right boundaries of operation. These sensors will do the job sensing the boundary of the path the robot will take during the operation.
+* Implement multiple layers of optical and ultrasonic proximity sensors at the front and rear of the robot for obstacle detection and collision avoidance purposes. Each of these sensors are situated deeper into their own heated tubes in order to prevent them from being blocked by clogged or built up snow or ice. Multiple obstacle detection sensor phenomenon
+(optical & ultrasonic) is used for each segmented angle to maximize sensor redundancy so the operational safety is enhanced.
+* Implement a suitable snow texture in the simulation environment
+* Implement a snow texture detection policy within the robot
+* Implement a suitable tarmac texture in the simulation environment
+* Implement a tarmac texture detection policy within the robot
+* The robot is built with a powertrain that consists of two electric revolute joints which could independently drive both of the rear wheels in both forward and reverse directions. The angular velocity of the revolute joints is independently controlled by the system so the orientation and the speed of the robot can be adjusted as required.
+* Implement the front wheel pair so they are free to rotate in any direction such that they could support the rear powertrain control and maintain the stability of the structure.
+* Implement a rotating blade auger assembly at the front of the robot so it could collect the snow and crack the ice before pushing them into the rotating blade impeller assembly which is located behind the auger assembly. The auger blades and impeller blades are both driven by two independent revolute joints which could be controlled by the system. The auger blades rotate about the left-right horizontal axis and the impeller blades rotate about the front-rear horizontal axis.
+* Install a chute assembly at a 30 degrees slant from the vertical axis above the impeller mechanism so the impeller could throw the snow forcefully through it. The chute is driven by a revolute joint so that it could be rotated about the vertical axis between -135 and +135 degrees. A wider chute angle is chosen so the robot could throw the snow equally into a wider area within a specified perimeter. This is to prevent building up a snow hill in the front yard that often causes poor visibility for drivers.
+* The tip of the chute is attached with a horizontally rotatable cap that could be driven by a revolute joint so the snow throwing target distance could be controlled by adjusting its angle between +45 and +90 degrees. The farthest target distance is achieved by setting this cap at +45 degrees angle.
+* Implement obstruction response from the robot to the client with appropriate error messaging
 
 ## 4.0 RESPONSIBILITY
 |               Activity/Task                 | Responsibility of |     Aproved By    |
