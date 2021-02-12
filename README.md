@@ -26,34 +26,20 @@ well as the necessary documents related to the management of the project.
 
 ## 3.0 SCOPE
 ### 3.1 List of requirements
-A. When the initiation signal is received, the robot shall enter snow clearing
-state
-B. When the signal to halt is received, the robot shall leave snow clearing
-state
-C. When in snow clearing state, the robot shall stay within east/west bounds
-of movement
-D. When in snow clearing state, the robot shall not exceed the north/south
-boundaries of movement
-E. When in snow clearing state, the robot shall detect and differentiate
-between a snow covered path and a cleared path
-F. When in snow clearing state, the robot shall differentiate between an
-obstacle and snow
-G. When in snow clearing state, the robot shall differentiate between snow
-that is deep enough for the robot to clear and snow that is deeper than the
-robot is capable of clearing
-H. When in snow clearing state, and an obstruction is detected, the robot
-shall halt clearing snow
-I. When in snow clearing state, and an obstruction is detected, the robot
-shall halt movement
-J. When in snow clearing state, and an obstruction is detected. The robot
-shall notify the client
-K. At all times, the robot must be in control of its physical movement.
-L. Given the depth requirement of snow meets the robots capabilities, the
-robot shall always clear the snow when asked to do so.
-M. At all times, the snow that the robot clears, must not be thrown into a path
-that has already been cleared.
-N. At all times, the robot must not partake in actions that might cause harm or
-disrespect to any personal, property, or itself.
+* When the initiation signal is received, the robot shall enter snow clearing state
+* When the signal to halt is received, the robot shall leave snow clearing state
+* When in snow clearing state, the robot shall stay within east/west bounds of movement
+* When in snow clearing state, the robot shall not exceed the north/south boundaries of movement
+* When in snow clearing state, the robot shall detect and differentiate between a snow covered path and a cleared path
+* When in snow clearing state, the robot shall differentiate between an obstacle and snow
+* When in snow clearing state, the robot shall differentiate between snow that is deep enough for the robot to clear and snow that is deeper than the robot is capable of clearing
+* When in snow clearing state, and an obstruction is detected, the robot shall halt clearing snow
+* When in snow clearing state, and an obstruction is detected, the robot shall halt movement
+* When in snow clearing state, and an obstruction is detected. The robot shall notify the client
+* At all times, the robot must be in control of its physical movement.
+* Given the depth requirement of snow meets the robots capabilities, the robot shall always clear the snow when asked to do so.
+* At all times, the snow that the robot clears, must not be thrown into a path that has already been cleared.
+* At all times, the robot must not partake in actions that might cause harm or disrespect to any personal, property, or itself.
 
 ### 3.2 List of activities that meet the requirements
 A. Remote API function that can initiate the robot to enter operating mode
