@@ -8,6 +8,7 @@
 #
 # IMPORTANT: for each successful call to simxStart, there
 # should be a corresponding call to simxFinish at the end!
+# Testing line
 
 try:
     import sim
