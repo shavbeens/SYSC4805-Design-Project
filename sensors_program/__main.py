@@ -9,12 +9,26 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
     
     """ display on coppelia """
     client.simxAddStatusbarMessage('Sensor Program Started',client.simxDefaultPublisher())
-    
+
+    """ Assigning handlers to sensor objects in simulation """
+    """ First set is for vision sensors """
     visionHndl = [-1, -1, -1]
     retCode, visionHndl[0] = client.simxGetObjectHandle('Vision_sensor_L',client.simxServiceCall())
     retCode, visionHndl[1] = client.simxGetObjectHandle('Vision_sensor_M',client.simxServiceCall())
     retCode, visionHndl[2] = client.simxGetObjectHandle('Vision_sensor_R',client.simxServiceCall())
     print("Vision Handler ret: {}, vHandler: {}".format(retCode, visionHndl))
+
+    """ Second set is for proximity sensors """
+    frontProximityHndl = [-1, -1, -1, -1] #top, left, right and bottom
+    bodyProximityHndl = [-1, -1, -1] #left, right and rear
+    retCode, frontProximityHndl[0] = client.simxGetObjectHandle('Proximity_sensor_front_top',client.simxServiceCall())
+    retCode, frontProximityHndl[1] = client.simxGetObjectHandle('Proximity_sensor_front_left',client.simxServiceCall())
+    retCode, frontProximityHndl[2] = client.simxGetObjectHandle('Proximity_sensor_front_right',client.simxServiceCall())
+    retCode, frontProximityHndl[3] = client.simxGetObjectHandle('Proximity_sensor_front_bottom',client.simxServiceCall())
+    retCode, bodyProximityHndl[0] = client.simxGetObjectHandle('Proximity_sensor_left',client.simxServiceCall())
+    retCode, bodyProximityHndl[1] = client.simxGetObjectHandle('Proximity_sensor_right',client.simxServiceCall())
+    retCode, bodyProximityHndl[2] = client.simxGetObjectHandle('Proximity_sensor_rear',client.simxServiceCall())
+
     while(1):
         sensor_values = [0,0,0];
         for i in range(0,3,1):
@@ -23,7 +37,7 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
             
             retCode = retList[0]
             detectionState = retList[1]
-            #print("vision sensor 1 retList: {}".format(retList))
+            print("vision sensor 1 retList: {}".format(retList))
             if detectionState > -1:
                 Data = retList[2]
                 print("vision sensor 2 ret: {}, dstate: {}, d[11]: {}".format(retCode, detectionState, Data[11]))
@@ -39,5 +53,9 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
             pass
         if sensor_values[2] == 0:
             pass
+
+
+
+        #handle proximity sensors value here 
             
     
