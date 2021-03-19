@@ -32,34 +32,35 @@ if clientID!=-1:
     
     # Initializing the 
     
-    [leftSensorReturnCode, leftHandle] = sim.simxGetObjectHandle(clientID, "VisionSensorLeft", sim.simx_opmode_blocking)
-    [centerSensorReturnCode, centerHandle] = sim.simxGetObjectHandle(clientID, "VisionSensorCenter", sim.simx_opmode_blocking)
-    [rightSensorReturnCode, rightHandle] = sim.simxGetObjectHandle(clientID, "VisionSensorRight", sim.simx_opmode_blocking)
+    [leftSensorReturnCode, leftHandle] = sim.simxGetObjectHandle(clientID, "Vision_sensor_L", sim.simx_opmode_blocking)
+    [centerSensorReturnCode, centerHandle] = sim.simxGetObjectHandle(clientID, "Vision_sensor_M", sim.simx_opmode_blocking)
+    [rightSensorReturnCode, rightHandle] = sim.simxGetObjectHandle(clientID, "Vision_sensor_R", sim.simx_opmode_blocking)
     # sensors are then saved in the following tuple
-    visionSensor = (leftHandle, centerHandle, rightHandle)
+    visionSensor = [leftHandle, centerHandle, rightHandle]
 
     # Initialization of the Motor joints
     [leftMotorReturnCode, leftJoint] = sim.simxGetObjectHandle(clientID, "LeftMotor", sim.simx_opmode_blocking)
     [rightMotorReturnCode, rightJoint] = sim.simxGetObjectHandle(clientID, "RightMotor", sim.simx_opmode_blocking)
-    [chuteMotorReturnCode, chuteJoint] = sim.simxGetObjectHandle(clientID, "ChuteMotor", sim.simx_opmode_blocking)
-    print(leftMotorReturnCode, rightMotorReturnCode, chuteMotorReturnCode)
+    # [chuteMotorReturnCode, chuteJoint] = sim.simxGetObjectHandle(clientID, "ChuteMotor", sim.simx_opmode_blocking)
+    print(leftMotorReturnCode, rightMotorReturnCode)
     NOMINAL_VELOCITY = 1 # Nominal velocisty that will be used
     VAR = 1
 
     while True:
         # Let's get this party Started
-        defaultReading = (False, False, False)
+        defaultReading = [False, False, False]
         sensorReading = list(defaultReading)
         collision = False
 
         for i in range(0, 3):
             returnBool, state, aux = sim.simxReadVisionSensor(clientID, visionSensor[i], sim.simx_opmode_blocking)
             if state > -1:
-                sensorReading[i] = aux[0][11] < 0.3
+                sensorReading[i] = aux[0][11] < 0.6
+                print(sensorReading[i], ": Looped out", aux)
 
         rightV = NOMINAL_VELOCITY
         leftV = NOMINAL_VELOCITY
-        chuteV = NOMINAL_VELOCITY
+        # chuteV = NOMINAL_VELOCITY
 
         if sensorReading[0] and not sensorReading[1] and not sensorReading[2]:
             leftV = -0.03
@@ -72,7 +73,7 @@ if clientID!=-1:
 
         leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
         rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
-        chuteMotorReturnCode = sim.simxSetJointTargetVelocity(clientID, chuteJoint, chuteV, sim.simx_opmode_blocking)
+        # chuteMotorReturnCode = sim.simxSetJointTargetVelocity(clientID, chuteJoint, chuteV, sim.simx_opmode_blocking)
 
         if collision:
             break
