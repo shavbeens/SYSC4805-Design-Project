@@ -1,0 +1,52 @@
+--Non API testing with Lua programming - Wheel speed changed 
+--from stop to extreme slow so dragging avoided while turning
+
+function sysCall_init()
+    -- do some initialization here
+    ProximitySensor={-1,-1,-1}
+     ProximitySensor[1]=sim.getObjectHandle("Proximity_sensor_front_left")
+     ProximitySensor[2]=sim.getObjectHandle("Proximity_sensor_front_bottom")
+     ProximitySensor[3]=sim.getObjectHandle("Proximity_sensor_front_right")
+    leftJoint=sim.getObjectHandle("LeftMotor")
+    rightJoint=sim.getObjectHandle("RightMotor")
+    nominalLinearVelocity=0.8   
+    
+end
+
+function sysCall_actuation()
+    -- read the line detection sensors:
+    sensorReading={false,false,false}
+    sensorReading[1]=sim.readVisionSensor(ProximitySensor[1])
+    sensorReading[3]=sim.readVisionSensor(ProximitySensor[3])
+    sensorReading[2]=sim.readVisionSensor(ProximitySensor[2])
+    
+    --compute left and right velocities to follow the detected line:
+    rightV=nominalLinearVelocity
+    leftV=nominalLinearVelocity
+    if sensorReading[1] then --left sensor detected obstacle
+        --leftV=0.007999
+        rightV=0.0005 --slow right motor so robot can steer away from left obstacle
+    end
+    if sensorReading[3] then --right sensor detected obstacle
+        --rightV=0.007999
+        leftV=0.0005 --slow left motor so robot can steer away from right obstacle
+    end
+    if sensorReading[2] then --front bottom (mid) sensor detected obstacle
+        --rightV=0.007999
+        leftV=0.0 --stop left motor so robot can cease
+        rightV=0.0 --stop right motor so robot can cease
+    end
+    sim.setJointTargetVelocity(leftJoint,leftV)
+    sim.setJointTargetVelocity(rightJoint,rightV)
+    
+end
+
+function sysCall_sensing()
+    -- put your sensing code here
+end
+
+function sysCall_cleanup()
+    -- do some clean-up here
+end
+
+-- See the user manual or the available code snippets for additional callback functions and details
