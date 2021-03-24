@@ -25,7 +25,7 @@ import time
 
 print ('Program started')
 sim.simxFinish(-1) # just in case, close all opened connections
-clientID=sim.simxStart('127.0.0.1',19999,True,True,5000,5) # Connect to CoppeliaSim
+clientID=sim.simxStart('127.0.0.1',19999,True,True,5000,3) # Connect to CoppeliaSim
 if clientID!=-1:
     print ('Connected to remote API server')
     
@@ -43,7 +43,7 @@ if clientID!=-1:
     [rightMotorReturnCode, rightJoint] = sim.simxGetObjectHandle(clientID, "RightMotor", sim.simx_opmode_blocking)
     # [chuteMotorReturnCode, chuteJoint] = sim.simxGetObjectHandle(clientID, "ChuteMotor", sim.simx_opmode_blocking)
     print(leftMotorReturnCode, rightMotorReturnCode)
-    NOMINAL_VELOCITY = 1 # Nominal velocisty that will be used
+    NOMINAL_VELOCITY = 2 # Nominal velocisty that will be used
     VAR = 1
 
     while True:
@@ -55,28 +55,27 @@ if clientID!=-1:
         for i in range(0, 3):
             returnBool, state, aux = sim.simxReadVisionSensor(clientID, visionSensor[i], sim.simx_opmode_blocking)
             if state > -1:
-                sensorReading[i] = aux[0][11] < 0.6
-                print(sensorReading[i], ": Looped out", aux)
+                sensorReading[i] = aux[0][11] < 0.3
+                if i == 1:
+                    print(sensorReading[i], ": ", aux, "\n\n")
 
         rightV = NOMINAL_VELOCITY
         leftV = NOMINAL_VELOCITY
         # chuteV = NOMINAL_VELOCITY
 
-        if sensorReading[0] and not sensorReading[1] and not sensorReading[2]:
-            leftV = -0.03
-        if sensorReading[2] and not sensorReading[0] and not sensorReading[1]:
-            rightV = -0.03
-        if sensorReading[0] and sensorReading[1] and sensorReading[2]:
-            leftV = 0
-            rightV = 0
-            collision = True
+        if sensorReading[0] and not sensorReading[2]:
+            leftV = 0.3
+        if sensorReading[2] and not sensorReading[0]:
+            rightV = 0.3
+        # if sensorReading[0] and sensorReading[1] and sensorReading[2]:
+        #     leftV = 0
+        #     rightV = 0
+        #     collision = True
 
         leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
         rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
         # chuteMotorReturnCode = sim.simxSetJointTargetVelocity(clientID, chuteJoint, chuteV, sim.simx_opmode_blocking)
 
-        if collision:
-            break
     
     print("a collision is about to occur")
 
