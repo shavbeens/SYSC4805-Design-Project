@@ -22,6 +22,14 @@ except:
     print ('')
 
 import time
+import threading
+
+def getAverage(auxilary):
+    red = auxilary[11]
+    green = auxilary[12]
+    blue = auxilary[13]
+    return (red + green + blue) / 3
+
 
 print ('Program started')
 sim.simxFinish(-1) # just in case, close all opened connections
@@ -55,18 +63,21 @@ if clientID!=-1:
         for i in range(0, 3):
             returnBool, state, aux = sim.simxReadVisionSensor(clientID, visionSensor[i], sim.simx_opmode_blocking)
             if state > -1:
-                sensorReading[i] = aux[0][11] < 0.3
                 if i == 1:
+                    sensorReading[i] = getAverage(aux[0]) > 0.45
                     print(sensorReading[i], ": ", aux, "\n\n")
+                else:
+                    sensorReading[i] = getAverage(aux[0]) < 0.25
+
 
         rightV = NOMINAL_VELOCITY
         leftV = NOMINAL_VELOCITY
         # chuteV = NOMINAL_VELOCITY
 
         if sensorReading[0] and not sensorReading[2]:
-            leftV = 0.3
+            leftV = 1.3
         if sensorReading[2] and not sensorReading[0]:
-            rightV = 0.3
+            rightV = 1.3
         # if sensorReading[0] and sensorReading[1] and sensorReading[2]:
         #     leftV = 0
         #     rightV = 0
