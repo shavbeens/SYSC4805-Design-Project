@@ -10,7 +10,7 @@ from os import system
 clear = lambda: system('cls')
 
 
-maxProximityDistance = 0.15
+maxProximityDistance = 0.10
 
 norminalv = 1
 forwardFastV = 1
@@ -73,10 +73,8 @@ stopAngle = y_p
 pFrontBtm = 0
 pFrontLft = 1
 pFrontRht = 2
-pFrontTop = 3
-pLeft = 4
-pRear = 5
-pRight = 6
+pLeft = 3
+pRight = 4
 
 def sendWheelData():
     global leftMtrSpd, rightMtrSpd
@@ -111,24 +109,31 @@ def diffWheelTurnLeft():
     rightMtrSpd = forwardSlowV
     sendWheelData() 
     
+def reverseWheels():
+    print("Reversing wheels ") 
+    global leftMtrSpd, rightMtrSpd    
+    leftMtrSpd =  reverseSlowV
+    rightMtrSpd = reverseSlowV
+    sendWheelData()    
+
+def suckSnow():
+    print ("sucking snow ")
+    stopWheels()    
 
 with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAddOn',60) as client:
     
     """ display on coppelia """
     client.simxAddStatusbarMessage('Sensor Program Started',client.simxDefaultPublisher())
     
-    visionHndl = [-1, -1, -1]
+    visionHndl = [-1, -1]
     retCode, visionHndl[0] = client.simxGetObjectHandle('Vision_sensor_L',client.simxServiceCall())
-    retCode, visionHndl[1] = client.simxGetObjectHandle('Vision_sensor_M',client.simxServiceCall())
-    retCode, visionHndl[2] = client.simxGetObjectHandle('Vision_sensor_R',client.simxServiceCall())
+    retCode, visionHndl[1] = client.simxGetObjectHandle('Vision_sensor_R',client.simxServiceCall())
 
-    proximityHndl = [-1, -1, -1, -1, -1, -1, -1]
+    proximityHndl = [-1, -1, -1, -1, -1]
     retCode, proximityHndl[pFrontBtm] = client.simxGetObjectHandle('Proximity_sensor_front_bottom',client.simxServiceCall())
     retCode, proximityHndl[pFrontLft] = client.simxGetObjectHandle('Proximity_sensor_front_left',client.simxServiceCall())
     retCode, proximityHndl[pFrontRht] = client.simxGetObjectHandle('Proximity_sensor_front_right',client.simxServiceCall())
-    retCode, proximityHndl[pFrontTop] = client.simxGetObjectHandle('Proximity_sensor_front_top',client.simxServiceCall())
     retCode, proximityHndl[pLeft] = client.simxGetObjectHandle('Proximity_sensor_left',client.simxServiceCall())
-    retCode, proximityHndl[pRear] = client.simxGetObjectHandle('Proximity_sensor_rear',client.simxServiceCall())
     retCode, proximityHndl[pRight] = client.simxGetObjectHandle('Proximity_sensor_right',client.simxServiceCall())
 
     retCode, leftMotorHndl = client.simxGetObjectHandle('LeftMotor',client.simxServiceCall())
@@ -139,7 +144,7 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
     retCode, augerMotorHndl= client.simxGetObjectHandle('AugerMotor',client.simxServiceCall())
 
     retCode, robotBodyHndl= client.simxGetObjectHandle('RobotBody',client.simxServiceCall())
-    retCode, stopDummyHndl= client.simxGetObjectHandle('Stop',client.simxServiceCall())
+    retCode, stopDummyHndl= client.simxGetObjectHandle('StopPointDummy',client.simxServiceCall())
     
     leftMtrSpd = 0
     rightMtrSpd = 0
@@ -205,34 +210,30 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
         """ STATE MACHINE """
         if (ROBOT_STATE == 'start'):
             #start motors
-            forwardSlow()
 
             """ SENSOR OPERATIONS: """
-            visionVal = [0,0,0];
-            for i in range(0,3,1):
+            """ 1. get vision data"""
+            visionVal = [0,0];
+            for i in range(0,len(visionVal)):
                 retList = client.simxReadVisionSensor(visionHndl[i], client.simxServiceCall())
                 retCode = retList[0]
                 detectionState = retList[1]
                 #print("vision sensor 1 retList: {}".format(retList))
-                print("vision sensor[{}] detect: {} ".format(i, detectionState))
+                # print("vision sensor[{}] detect: {} ".format(i, detectionState))
                 if detectionState > -1:
                     Data = retList[2]
                     #print("vision sensor 2 ret: {}, dstate: {}, d[11]: {}".format(retCode, detectionState, Data[11]))
                     #if sensor detect snow
                     print("vision sensor [{}] data: {}".format(i,Data[11]))
-                    if Data[11] < 0.7: #0: black, 0.99: white
+                    if Data[11] < 0.3: #0: black, 0.99: white
                         visionVal[i] = 1
                     else:
                         visionVal[i] = 0 #if white
 
-            #if both all sensors are white auger motor can be turned on
-            #if the sensor goes black the motor can be turned off
-            if visionVal[0] == 0 or visionVal[1] == 0 or visionVal[2] == 0:
-                print("SNOW DETECTED {}, snow extraction sequence started ".format(visionVal))
-                stopWheels()
 
-            j = maxProximityDistance +1
-            proxVal = [j,j,j,j,j,j,j]
+            """ 2. get proximity data """
+            j = maxProximityDistance +1 #added 1 to set it to a very high default value 
+            proxVal = [j,j,j,j,j]
 
             for i in range(0, len(proxVal)):
                 #index-> 0: err code, 1: detection state (> 0 means there's value ), 2: detected distance
@@ -244,21 +245,41 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
                     print("No Proximity data for {}".format(i));        
   
   
+            """ use the two data for decision making """
             k = maxProximityDistance
-            if ((proxVal[pFrontBtm] < k) or (proxVal[pFrontLft] < k) or (proxVal[pFrontRht] < j) or (proxVal[pFrontTop] < k)):
-                if (proxVal[pRight] < k) :
-                    #turn left
-                    diffWheelTurnLeft()
-                    
-                elif (proxVal[pLeft] < k):
-                    #turn right
-                    diffWheelTurnRight()
-                #stop robot
-                pass
+            d = 0 #decision variable  0: keep going, 1: obstacle detected, 2: sucksnow
+            #if obsta is present donw, check if it is snow, 
+                #if not snow 
+            #check the top sensor to check if it is an obstacle
+            if ( (proxVal[pFrontLft] < k) or (proxVal[pFrontRht] < k) ):
+                d = 1 
+            elif (proxVal[pFrontBtm] < k):
+                #if the vision sensor already detected snow texture property 
+                if visionVal[0] == 0 or visionVal[1] == 0:
+                    print("SNOW DETECTED {}, snow extraction sequence started ".format(visionVal))
+                    d = 2
+                else : 
+                    d = 1
                 
+            if (d == 0):
+                forwardSlow()
+            elif (d == 1):
+                if ( (proxVal[pRight] < k) and (proxVal[pLeft] < k) ):
+                    reverseWheels()         #reverse
+                elif (proxVal[pRight] < k) :
+                    diffWheelTurnLeft()     #turn left
+                else : #elif (proxVal[pLeft] < k):
+                    diffWheelTurnRight()    #turn right                  
+                # stopWheels() 
+            elif (d == 2): 
+                suckSnow()
+                
+                 
             
         elif (ROBOT_STATE == 'stop'):
             #if robot is not in stop position
+            stopWheels()
+            """
             if ( not atStopPoint(r_x, r_y, stopPosition)):
                 #move to x first
                 p = axisClass(r_x, stopPosition[0])
@@ -277,6 +298,7 @@ with b0RemoteApi.RemoteApiClient('b0RemoteApi_CoppeliaSim-addOn','b0RemoteApiAdd
             
             else :
                 stopWheels()
+                """
                 
         else :
             #if in an unknown state 
