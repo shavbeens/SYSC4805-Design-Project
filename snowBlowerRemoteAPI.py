@@ -24,11 +24,16 @@ except:
 import time
 import threading
 
-def getAverage(auxilary):
+# Robot State Variables
+
+
+def getAverageColour(auxilary):
     red = auxilary[11]
     green = auxilary[12]
     blue = auxilary[13]
     return (red + green + blue) / 3
+
+
 
 
 print ('Program started')
@@ -38,13 +43,13 @@ if clientID!=-1:
     print ('Connected to remote API server')
     
     
-    # Initializing the 
-    
+    # Initializing the objects that are gonna be used in the robot, starting with vision sensors
     [leftSensorReturnCode, leftHandle] = sim.simxGetObjectHandle(clientID, "Vision_sensor_L", sim.simx_opmode_blocking)
     [centerSensorReturnCode, centerHandle] = sim.simxGetObjectHandle(clientID, "Vision_sensor_M", sim.simx_opmode_blocking)
     [rightSensorReturnCode, rightHandle] = sim.simxGetObjectHandle(clientID, "Vision_sensor_R", sim.simx_opmode_blocking)
     # sensors are then saved in the following tuple
     visionSensor = [leftHandle, centerHandle, rightHandle]
+
 
     # Initialization of the Motor joints
     [leftMotorReturnCode, leftJoint] = sim.simxGetObjectHandle(clientID, "LeftMotor", sim.simx_opmode_blocking)
@@ -54,22 +59,51 @@ if clientID!=-1:
     NOMINAL_VELOCITY = 2 # Nominal velocisty that will be used
     VAR = 1
 
+    # Get Object Handles for CentreGravity and CentreGravity_1 reference points
+    [centreGravityReturnCode, referencePoint] = sim.simxGetObjectHandle(clientID, "CentreGravity", sim.simx_opmode_blocking)
+    [centreGravity_1ReturnCode, referencePoint2] = sim.simxGetObjectHandle(clientID, "CentreGravity_1", sim.simx_opmode_blocking)
+    #Get Object handles for PlaneY and PlaneX
+    [planeYReturnCode, planeY] = sim.simxGetObjectHandle(clientID, "PlaneY", sim.simx_opmode_blocking)
+    [planeXReturnCode, planeX] = sim.simxGetObjectHandle(clientID, "PlaneX", sim.simx_opmode_blocking)
+
+    # Main operating function of the robot
     while True:
-        # Let's get this party Started
         defaultReading = [False, False, False]
         sensorReading = list(defaultReading)
         collision = False
 
+
+        # Checks if colour reading are correct from the vision Sensor
         for i in range(0, 3):
             returnBool, state, aux = sim.simxReadVisionSensor(clientID, visionSensor[i], sim.simx_opmode_blocking)
             if state > -1:
                 if i == 1:
-                    sensorReading[i] = getAverage(aux[0]) > 0.45
+                    sensorReading[i] = getAverageColour(aux[0]) > 0.45
                     print(sensorReading[i], ": ", aux, "\n\n")
                 else:
-                    sensorReading[i] = getAverage(aux[0]) < 0.25
+                    sensorReading[i] = getAverageColour(aux[0]) < 0.25
 
 
+        # Find the readings from the object group data, Starting with X, Y, Z points for CentreGravity
+        returnCode, x1 = sim.simxGetObjectPosition(clientID, referencePoint, planeX, sim.simx_opmode_blocking)
+        returnCode, y1 = sim.simxGetObjectPosition(clientID, referencePoint, planeY, sim.simx_opmode_blocking)
+        # Then Find X, Y, Z coordinates for CentreGravity_1
+        returnCode, x2 = sim.simxGetObjectPosition(clientID, referencePoint2, planeX, sim.simx_opmode_blocking)
+        returnCode, y2 = sim.simxGetObjectPosition(clientID, referencePoint2, planeY, sim.simx_opmode_blocking)
+        # We only care about X value for x1 and x2, and Y value for y1 and y2; We have to be mindful of what value we take according to our reference point 
+        x1 = x1[0]
+        x2 = x2[0]
+        y1 = y1[0]
+        y2 = y2[0]
+
+        print("CentreGravity: (%s, %s)" % (x1, y1))
+        print("CentreGravity_1: (%s, %s)" % (x2, y2))
+
+
+
+
+
+        # Sets velocity of the robot according to the calculated solutions above
         rightV = NOMINAL_VELOCITY
         leftV = NOMINAL_VELOCITY
         # chuteV = NOMINAL_VELOCITY
