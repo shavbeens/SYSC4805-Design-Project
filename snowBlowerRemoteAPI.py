@@ -23,9 +23,18 @@ except:
 
 import time
 import threading
+import math
 
 # Robot State Variables
+STOP = 0
+STANDBY = 1
+MOVESTRAIGHT = 2
+UTURNLEFT = 3
+UTURNRIGHT = 4
+AVOIDLEFT = 5
+AVOIDRIGHT = 6
 
+currentState = STANDBY
 
 def getAverageColour(auxilary):
     red = auxilary[11]
@@ -34,6 +43,54 @@ def getAverageColour(auxilary):
     return (red + green + blue) / 3
 
 
+class myThread(threading.Thread):
+    def __init__(self, threadID, name, clientID, referencePoint, referencePoint2, planeX, planeY):
+        threading.Thread.__init__(self)
+        self.ThreadID = threadID
+        self.name = name
+        self.clientID = clientID
+        self.referencePoint = referencePoint
+        self.referencePoint2 = referencePoint2
+        self.planeX = planeX
+        self.planeY = planeY
+
+    def run(self):
+        print("Starting " + self.name)
+        runThread(self.name, self.clientID, self.referencePoint, self.referencePoint2, self.planeX, self.planeY)
+        print("%s Exited" % self.name)
+
+# Thread Runnable
+def runThread(threadName, clientID, referencePoint, referencePoint2, planeX, planeY):
+    global currentState
+    keepRunning = True
+
+    print("running " + threadName)
+    while keepRunning:
+        if currentState == STOP:
+            print("exiting movement loop...")
+            keepRunning = False
+
+        elif currentState == STANDBY:
+            currentState = MOVESTRAIGHT
+            print("Currently in Standby but changed states to MoveStraigh")
+
+        elif currentState == MOVESTRAIGHT:
+            pass
+
+        elif currentState == UTURNLEFT:
+            print("do something here")
+
+        elif currentState == UTURNRIGHT:
+            print("do something here")
+
+        elif currentState == AVOIDLEFT:
+            print("do something here")
+
+        elif currentState == AVOIDRIGHT:
+            print("")
+
+        else:
+            currentState = STOP
 
 
 print ('Program started')
@@ -66,8 +123,29 @@ if clientID!=-1:
     [planeYReturnCode, planeY] = sim.simxGetObjectHandle(clientID, "PlaneY", sim.simx_opmode_blocking)
     [planeXReturnCode, planeX] = sim.simxGetObjectHandle(clientID, "PlaneX", sim.simx_opmode_blocking)
 
+    thread = myThread(1, "MovementThread", clientID, referencePoint, referencePoint2, planeX, planeY)
+    thread.start()
+
     # Main operating function of the robot
-    while True:
+    while currentState != STOP:
+        # Find the readings from the object group data, Starting with X, Y, Z points for CentreGravity
+        returnCode, x1 = sim.simxGetObjectPosition(clientID, referencePoint, planeX, sim.simx_opmode_blocking)
+        returnCode, y1 = sim.simxGetObjectPosition(clientID, referencePoint, planeY, sim.simx_opmode_blocking)
+        # Then Find X, Y, Z coordinates for CentreGravity_1
+        returnCode, x2 = sim.simxGetObjectPosition(clientID, referencePoint2, planeX, sim.simx_opmode_blocking)
+        returnCode, y2 = sim.simxGetObjectPosition(clientID, referencePoint2, planeY, sim.simx_opmode_blocking)
+        # We only care about X value for x1 and x2, and Y value for y1 and y2; We have to be mindful of what value we take according to our reference point 
+        x1 = x1[0]
+        x2 = x2[0]
+        y1 = y1[0]
+        y2 = y2[0]
+        # Then Find theta between centreGravity and CentreGravity_1-----> theta = inverseTan(y2-y1 / x2-x1)
+        theta = math.degrees(math.atan((y2-y1) / (x2-x1)))
+
+        print("CentreGravity: (%s, %s)" % (x1, y1))
+        print("CentreGravity_1: (%s, %s)" % (x2, y2))
+        print("Theta angle is: %s degrees" % theta)
+
         defaultReading = [False, False, False]
         sensorReading = list(defaultReading)
         collision = False
@@ -84,20 +162,7 @@ if clientID!=-1:
                     sensorReading[i] = getAverageColour(aux[0]) < 0.25
 
 
-        # Find the readings from the object group data, Starting with X, Y, Z points for CentreGravity
-        returnCode, x1 = sim.simxGetObjectPosition(clientID, referencePoint, planeX, sim.simx_opmode_blocking)
-        returnCode, y1 = sim.simxGetObjectPosition(clientID, referencePoint, planeY, sim.simx_opmode_blocking)
-        # Then Find X, Y, Z coordinates for CentreGravity_1
-        returnCode, x2 = sim.simxGetObjectPosition(clientID, referencePoint2, planeX, sim.simx_opmode_blocking)
-        returnCode, y2 = sim.simxGetObjectPosition(clientID, referencePoint2, planeY, sim.simx_opmode_blocking)
-        # We only care about X value for x1 and x2, and Y value for y1 and y2; We have to be mindful of what value we take according to our reference point 
-        x1 = x1[0]
-        x2 = x2[0]
-        y1 = y1[0]
-        y2 = y2[0]
-
-        print("CentreGravity: (%s, %s)" % (x1, y1))
-        print("CentreGravity_1: (%s, %s)" % (x2, y2))
+        
 
 
 
