@@ -34,7 +34,25 @@ UTURNRIGHT = 4
 AVOIDLEFT = 5
 AVOIDRIGHT = 6
 
+# Robot state variable
 currentState = STANDBY
+
+# Robot initialization variable
+isStart = True
+
+# Robot Checkpoint variables
+nextCheckPoint = 1.0
+checkPointIndex = 1.0
+
+# Robot Heading Variables
+NORTH = 0
+SOUTH = 1
+robotHeading = NORTH # Change this to south if the robot starts heading south initially 
+
+# Robot Turning Variables
+LEFT = 0
+RIGHT = 1
+robotNextTurn = LEFT # Change this to right if the first turn is a right turn
 
 def getAverageColour(auxilary):
     red = auxilary[11]
@@ -65,32 +83,7 @@ def runThread(threadName, clientID, referencePoint, referencePoint2, planeX, pla
     keepRunning = True
 
     print("running " + threadName)
-    while keepRunning:
-        if currentState == STOP:
-            print("exiting movement loop...")
-            keepRunning = False
-
-        elif currentState == STANDBY:
-            currentState = MOVESTRAIGHT
-            print("Currently in Standby but changed states to MoveStraigh")
-
-        elif currentState == MOVESTRAIGHT:
-            pass
-
-        elif currentState == UTURNLEFT:
-            print("do something here")
-
-        elif currentState == UTURNRIGHT:
-            print("do something here")
-
-        elif currentState == AVOIDLEFT:
-            print("do something here")
-
-        elif currentState == AVOIDRIGHT:
-            print("")
-
-        else:
-            currentState = STOP
+    
 
 
 print ('Program started')
@@ -113,7 +106,7 @@ if clientID!=-1:
     [rightMotorReturnCode, rightJoint] = sim.simxGetObjectHandle(clientID, "RightMotor", sim.simx_opmode_blocking)
     # [chuteMotorReturnCode, chuteJoint] = sim.simxGetObjectHandle(clientID, "ChuteMotor", sim.simx_opmode_blocking)
     print(leftMotorReturnCode, rightMotorReturnCode)
-    NOMINAL_VELOCITY = 2 # Nominal velocisty that will be used
+    NOMINAL_VELOCITY = 1 # Nominal velocisty that will be used
     VAR = 1
 
     # Get Object Handles for CentreGravity and CentreGravity_1 reference points
@@ -123,8 +116,8 @@ if clientID!=-1:
     [planeYReturnCode, planeY] = sim.simxGetObjectHandle(clientID, "PlaneY", sim.simx_opmode_blocking)
     [planeXReturnCode, planeX] = sim.simxGetObjectHandle(clientID, "PlaneX", sim.simx_opmode_blocking)
 
-    thread = myThread(1, "MovementThread", clientID, referencePoint, referencePoint2, planeX, planeY)
-    thread.start()
+    # thread = myThread(1, "MovementThread", clientID, referencePoint, referencePoint2, planeX, planeY)
+    # thread.start()
 
     # Main operating function of the robot
     while currentState != STOP:
@@ -142,10 +135,6 @@ if clientID!=-1:
         # Then Find theta between centreGravity and CentreGravity_1-----> theta = inverseTan(y2-y1 / x2-x1)
         theta = math.degrees(math.atan((y2-y1) / (x2-x1)))
 
-        print("CentreGravity: (%s, %s)" % (x1, y1))
-        print("CentreGravity_1: (%s, %s)" % (x2, y2))
-        print("Theta angle is: %s degrees" % theta)
-
         defaultReading = [False, False, False]
         sensorReading = list(defaultReading)
         collision = False
@@ -161,30 +150,145 @@ if clientID!=-1:
                 else:
                     sensorReading[i] = getAverageColour(aux[0]) < 0.25
 
-
         
+        if currentState == STOP:
+            print("exiting movement loop...")
+
+        elif currentState == STANDBY:
+            if isStart:
+                currentState = MOVESTRAIGHT
+                print("Currently in Standby but changed states to MoveStraigh")
+                isStart = False
+            else:
+                # Firstly stop the movement on the robot
+                leftV = 0
+                rightV = 0
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+                # Check if we reached our checkpoint
+                if robotHeading == NORTH:
+                    if nextCheckPoint == 1.0:
+                        print("Got to the first checkpoint, gonna sleep then continue")
+                        time.sleep(0.5)
+                        nextCheckPoint = nextCheckPoint + checkPointIndex
+                        currentState = MOVESTRAIGHT
+                    elif nextCheckPoint == 2.0:
+                        print("Got to the second checkpoint, gonna sleep then continue")
+                        time.sleep(0.5)
+                        nextCheckPoint = nextCheckPoint + checkPointIndex
+                        currentState = MOVESTRAIGHT
+                    elif nextCheckPoint == 3.0:
+                        print("Got to the third checkpoint, gonna stop")
+                        time.sleep(0.5)
+                        #nextCheckPoint = nextCheckPoint + checkPointIndex
+                        currentState = UTURNLEFT
+                elif robotHeading == SOUTH:
+                    print("got here and stopping")
+                    while True:
+                        pass
+                    if nextCheckPoint == 3.0:
+                        print("Got to the first checkpoint, gonna sleep then continue")
+                        time.sleep(5)
+                        nextCheckPoint = nextCheckPoint - checkPointIndex
+                        currentState = MOVESTRAIGHT
+                    elif nextCheckPoint == 2.0:
+                        print("Got to the second checkpoint, gonna sleep then continue")
+                        time.sleep(5)
+                        nextCheckPoint = nextCheckPoint - checkPointIndex
+                        currentState = MOVESTRAIGHT
+                    elif nextCheckPoint == 1.0:
+                        print("Got to the third checkpoint, gonna stop")
+                        time.sleep(5)
+                        currentState = UTURNRIGHT
 
 
+        elif currentState == MOVESTRAIGHT:
+            # Sets velocity of the robot according to the calculated solutions above
+            rightV = NOMINAL_VELOCITY
+            leftV = NOMINAL_VELOCITY
+            # chuteV = NOMINAL_VELOCITY
 
+            # if sensorReading[0] and not sensorReading[2]:
+            if x1 > x2:
+                leftV = 0.9
+            # if sensorReading[2] and not sensorReading[0]:
+            if x1 < x2:
+                rightV = 0.9
+            
+            print("CentreGravity: (%s, %s)" % (x1, y1))
+            print("CentreGravity_1: (%s, %s)" % (x2, y2))
+            print("Theta angle is: %s degrees" % theta)
 
+            leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+            rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+            # chuteMotorReturnCode = sim.simxSetJointTargetVelocity(clientID, chuteJoint, chuteV, sim.simx_opmode_blocking)
 
-        # Sets velocity of the robot according to the calculated solutions above
-        rightV = NOMINAL_VELOCITY
-        leftV = NOMINAL_VELOCITY
-        # chuteV = NOMINAL_VELOCITY
+            # If Y2 is at 1, then it is a checkpoint
+            if y2 >= nextCheckPoint:
+                print("Reached first Checkpoint")
+                currentState = STANDBY
 
-        if sensorReading[0] and not sensorReading[2]:
-            leftV = 1.3
-        if sensorReading[2] and not sensorReading[0]:
-            rightV = 1.3
-        # if sensorReading[0] and sensorReading[1] and sensorReading[2]:
-        #     leftV = 0
-        #     rightV = 0
-        #     collision = True
+        elif currentState == UTURNLEFT:
+            # Sets velocity of the robot according to the calculated solutions above
+            rightV = NOMINAL_VELOCITY
+            leftV = NOMINAL_VELOCITY
+            # chuteV = NOMINAL_VELOCITY
 
-        leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
-        rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
-        # chuteMotorReturnCode = sim.simxSetJointTargetVelocity(clientID, chuteJoint, chuteV, sim.simx_opmode_blocking)
+            # Use theta value to turn the Robot to the left
+            if theta < 45:
+                rightV = NOMINAL_VELOCITY / 8
+                leftV = -NOMINAL_VELOCITY / 8
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta > -45:
+                rightV = NOMINAL_VELOCITY / 8
+                leftV = -NOMINAL_VELOCITY / 8
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+            
+            elif theta <= -45 and theta > -70:
+                rightV = NOMINAL_VELOCITY / 16
+                leftV = -NOMINAL_VELOCITY / 16
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta <= -70 and theta > -85:
+                rightV = NOMINAL_VELOCITY / 32
+                leftV = -NOMINAL_VELOCITY / 32
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta <= -85:
+                rightV = 0
+                leftV = 0
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                robotHeading = SOUTH
+                robotNextTurn = RIGHT
+                currentState = STANDBY
+            
+            print("turning right now: angle is %s" % theta)
+
+            
+            
+
+        elif currentState == UTURNRIGHT:
+            # Add turning logic here
+            robotNextTurn = LEFT
+            currentState = MOVESTRAIGHT
+
+        elif currentState == AVOIDLEFT:
+            print("do something here")
+            
+
+        elif currentState == AVOIDRIGHT:
+            print("")
+
+        else:
+            currentState = STOP
+    
 
     
     print("a collision is about to occur")
