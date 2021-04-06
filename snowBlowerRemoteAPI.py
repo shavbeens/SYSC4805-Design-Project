@@ -53,6 +53,7 @@ robotHeading = NORTH # Change this to south if the robot starts heading south in
 LEFT = 0
 RIGHT = 1
 robotNextTurn = LEFT # Change this to right if the first turn is a right turn
+uturnComplete = False
 
 def getAverageColour(auxilary):
     red = auxilary[11]
@@ -116,6 +117,9 @@ if clientID!=-1:
     [planeYReturnCode, planeY] = sim.simxGetObjectHandle(clientID, "PlaneY", sim.simx_opmode_blocking)
     [planeXReturnCode, planeX] = sim.simxGetObjectHandle(clientID, "PlaneX", sim.simx_opmode_blocking)
 
+    returnCode, startingX = sim.simxGetObjectPosition(clientID, referencePoint2, planeX, sim.simx_opmode_blocking)
+    returnCode, startingY = sim.simxGetObjectPosition(clientID, referencePoint2, planeY, sim.simx_opmode_blocking)
+
     # thread = myThread(1, "MovementThread", clientID, referencePoint, referencePoint2, planeX, planeY)
     # thread.start()
 
@@ -169,38 +173,30 @@ if clientID!=-1:
                 # Check if we reached our checkpoint
                 if robotHeading == NORTH:
                     if nextCheckPoint == 1.0:
-                        print("Got to the first checkpoint, gonna sleep then continue")
-                        time.sleep(0.5)
+                        print("Got to the first checkpoint")
                         nextCheckPoint = nextCheckPoint + checkPointIndex
                         currentState = MOVESTRAIGHT
                     elif nextCheckPoint == 2.0:
-                        print("Got to the second checkpoint, gonna sleep then continue")
-                        time.sleep(0.5)
+                        print("Got to the second checkpoint")
                         nextCheckPoint = nextCheckPoint + checkPointIndex
                         currentState = MOVESTRAIGHT
                     elif nextCheckPoint == 3.0:
                         print("Got to the third checkpoint, gonna stop")
-                        time.sleep(0.5)
                         #nextCheckPoint = nextCheckPoint + checkPointIndex
                         currentState = UTURNLEFT
                 elif robotHeading == SOUTH:
-                    print("got here and stopping")
-                    while True:
-                        pass
                     if nextCheckPoint == 3.0:
-                        print("Got to the first checkpoint, gonna sleep then continue")
-                        time.sleep(5)
+                        print("Got to the first checkpoint in new row")
                         nextCheckPoint = nextCheckPoint - checkPointIndex
                         currentState = MOVESTRAIGHT
                     elif nextCheckPoint == 2.0:
-                        print("Got to the second checkpoint, gonna sleep then continue")
-                        time.sleep(5)
+                        print("Got to the second checkpoint")
                         nextCheckPoint = nextCheckPoint - checkPointIndex
                         currentState = MOVESTRAIGHT
                     elif nextCheckPoint == 1.0:
                         print("Got to the third checkpoint, gonna stop")
-                        time.sleep(5)
                         currentState = UTURNRIGHT
+                        
 
 
         elif currentState == MOVESTRAIGHT:
@@ -209,13 +205,21 @@ if clientID!=-1:
             leftV = NOMINAL_VELOCITY
             # chuteV = NOMINAL_VELOCITY
 
-            # if sensorReading[0] and not sensorReading[2]:
-            if x1 > x2:
-                leftV = 0.9
-            # if sensorReading[2] and not sensorReading[0]:
-            if x1 < x2:
-                rightV = 0.9
-            
+            if robotHeading == NORTH:
+                # if sensorReading[0] and not sensorReading[2]:
+                if x1 > x2:
+                    leftV = 0.9
+                # if sensorReading[2] and not sensorReading[0]:
+                if x1 < x2:
+                    rightV = 0.9
+            elif robotHeading == SOUTH:
+                # if sensorReading[0] and not sensorReading[2]:
+                if x1 > x2:
+                    rightV = 0.9
+                # if sensorReading[2] and not sensorReading[0]:
+                if x1 < x2:
+                    leftV = 0.9
+                
             print("CentreGravity: (%s, %s)" % (x1, y1))
             print("CentreGravity_1: (%s, %s)" % (x2, y2))
             print("Theta angle is: %s degrees" % theta)
@@ -225,9 +229,15 @@ if clientID!=-1:
             # chuteMotorReturnCode = sim.simxSetJointTargetVelocity(clientID, chuteJoint, chuteV, sim.simx_opmode_blocking)
 
             # If Y2 is at 1, then it is a checkpoint
-            if y2 >= nextCheckPoint:
-                print("Reached first Checkpoint")
-                currentState = STANDBY
+            if robotHeading == NORTH:
+                if y2 >= nextCheckPoint:
+                    print("Reached a checkpoint")
+                    currentState = STANDBY
+            elif robotHeading == SOUTH:
+                if y2 <= nextCheckPoint:
+                    print("Reached a checkpoint")
+                    currentState = STANDBY
+
 
         elif currentState == UTURNLEFT:
             # Sets velocity of the robot according to the calculated solutions above
@@ -236,15 +246,22 @@ if clientID!=-1:
             # chuteV = NOMINAL_VELOCITY
 
             # Use theta value to turn the Robot to the left
-            if theta < 45:
+            # Initially turn 90 degrees and stop. 
+            if theta <= 90 and theta > 25:
                 rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 8
+                leftV = -NOMINAL_VELOCITY / 7
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
-            elif theta > -45:
+            elif theta <= 25 and theta > 0:
                 rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 8
+                leftV = -NOMINAL_VELOCITY / 7
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta > -45 and theta <= 0:
+                rightV = NOMINAL_VELOCITY / 8
+                leftV = -NOMINAL_VELOCITY / 7
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
@@ -259,25 +276,85 @@ if clientID!=-1:
                 leftV = -NOMINAL_VELOCITY / 32
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                uturnComplete = True
 
             elif theta <= -85:
-                rightV = 0
-                leftV = 0
-                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
-                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
-                robotHeading = SOUTH
-                robotNextTurn = RIGHT
-                currentState = STANDBY
+                if uturnComplete:
+                    uturnComplete = False
+                    rightV = 0
+                    leftV = 0
+                    leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                    rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                    robotHeading = SOUTH
+                    robotNextTurn = RIGHT
+                    currentState = STANDBY
+                elif not uturnComplete:
+                    rightV = NOMINAL_VELOCITY / 8
+                    leftV = -NOMINAL_VELOCITY / 7
+                    leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                    rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
-            print("turning right now: angle is %s" % theta)
+            print("turning left now: angle is %s" % theta)
 
             
             
 
         elif currentState == UTURNRIGHT:
-            # Add turning logic here
-            robotNextTurn = LEFT
-            currentState = MOVESTRAIGHT
+            # Sets velocity of the robot according to the calculated solutions above
+            rightV = NOMINAL_VELOCITY
+            leftV = NOMINAL_VELOCITY
+            # chuteV = NOMINAL_VELOCITY
+
+            # Use theta value to turn the Robot to the left
+            # Initially turn 90 degrees and stop. 
+            if theta >= -90 and theta < -25:
+                rightV = -NOMINAL_VELOCITY / 8
+                leftV = NOMINAL_VELOCITY / 7
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta >= -25 and theta < 0:
+                rightV = -NOMINAL_VELOCITY / 8
+                leftV = NOMINAL_VELOCITY / 7
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta < 45 and theta >= 0:
+                rightV = -NOMINAL_VELOCITY / 8
+                leftV = NOMINAL_VELOCITY / 7
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+            
+            elif theta >= 45 and theta < 70:
+                rightV = -NOMINAL_VELOCITY / 16
+                leftV = NOMINAL_VELOCITY / 16
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            elif theta >= 70 and theta < 85:
+                rightV = -NOMINAL_VELOCITY / 32
+                leftV = NOMINAL_VELOCITY / 32
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                uturnComplete = True
+
+            elif theta >= 85:
+                if uturnComplete:
+                    rightV = 0
+                    leftV = 0
+                    leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                    rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                    robotHeading = NORTH
+                    robotNextTurn = LEFT
+                    currentState = STANDBY
+                elif not uturnComplete:
+                    rightV = -NOMINAL_VELOCITY / 8
+                    leftV = NOMINAL_VELOCITY / 7
+                    leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                    rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            
+            print("turning right now: angle is %s" % theta)
 
         elif currentState == AVOIDLEFT:
             print("do something here")
