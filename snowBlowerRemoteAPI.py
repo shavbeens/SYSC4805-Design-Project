@@ -249,19 +249,19 @@ if clientID!=-1:
             # Initially turn 90 degrees and stop. 
             if theta <= 90 and theta > 25:
                 rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 7
+                leftV = -NOMINAL_VELOCITY / 9
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif theta <= 25 and theta > 0:
                 rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 7
+                leftV = -NOMINAL_VELOCITY / 9
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif theta > -45 and theta <= 0:
                 rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 7
+                leftV = -NOMINAL_VELOCITY / 9
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
@@ -290,9 +290,15 @@ if clientID!=-1:
                     currentState = STANDBY
                 elif not uturnComplete:
                     rightV = NOMINAL_VELOCITY / 8
-                    leftV = -NOMINAL_VELOCITY / 7
+                    leftV = -NOMINAL_VELOCITY / 9
                     leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                     rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            else: 
+                rightV = NOMINAL_VELOCITY / 8
+                leftV = -NOMINAL_VELOCITY / 9
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
             print("turning left now: angle is %s" % theta)
 
@@ -308,20 +314,20 @@ if clientID!=-1:
             # Use theta value to turn the Robot to the left
             # Initially turn 90 degrees and stop. 
             if theta >= -90 and theta < -25:
-                rightV = -NOMINAL_VELOCITY / 8
-                leftV = NOMINAL_VELOCITY / 7
+                rightV = -NOMINAL_VELOCITY / 9
+                leftV = NOMINAL_VELOCITY / 8
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif theta >= -25 and theta < 0:
-                rightV = -NOMINAL_VELOCITY / 8
-                leftV = NOMINAL_VELOCITY / 7
+                rightV = -NOMINAL_VELOCITY / 9
+                leftV = NOMINAL_VELOCITY / 8
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif theta < 45 and theta >= 0:
-                rightV = -NOMINAL_VELOCITY / 8
-                leftV = NOMINAL_VELOCITY / 7
+                rightV = -NOMINAL_VELOCITY / 9
+                leftV = NOMINAL_VELOCITY / 8
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
@@ -348,10 +354,16 @@ if clientID!=-1:
                     robotNextTurn = LEFT
                     currentState = STANDBY
                 elif not uturnComplete:
-                    rightV = -NOMINAL_VELOCITY / 8
-                    leftV = NOMINAL_VELOCITY / 7
+                    rightV = -NOMINAL_VELOCITY / 9
+                    leftV = NOMINAL_VELOCITY / 8
                     leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                     rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+            else:
+                rightV = -NOMINAL_VELOCITY / 9
+                leftV = NOMINAL_VELOCITY / 8
+                leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             
             print("turning right now: angle is %s" % theta)
