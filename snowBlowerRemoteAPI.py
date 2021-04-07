@@ -101,6 +101,11 @@ if clientID!=-1:
     # sensors are then saved in the following tuple
     visionSensor = [leftHandle, centerHandle, rightHandle]
 
+    # Initializing the proximity sensors that are gonna be used in the robot
+    [leftProximityReturnCode, proximityLeft] = sim.simxGetObjectHandle(clientID, "Proximity_sensor_L", sim.simx_opmode_blocking)
+    [centerProximityReturnCode, proximityCenter] = sim.simxGetObjectHandle(clientID, "Proximity_sensor_M", sim.simx_opmode_blocking)
+    [rightProximityReturnCode, proximityRight] = sim.simxGetObjectHandle(clientID, "Proximity_sensor_R", sim.simx_opmode_blocking)
+
 
     # Initialization of the Motor joints
     [leftMotorReturnCode, leftJoint] = sim.simxGetObjectHandle(clientID, "LeftMotor", sim.simx_opmode_blocking)
