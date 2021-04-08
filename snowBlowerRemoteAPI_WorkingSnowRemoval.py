@@ -155,13 +155,9 @@ if clientID!=-1:
 
 
         # Checks if colour reading are correct from the vision Sensor
-        for i in range(0, 3):
-            returnBool, state, aux = sim.simxReadVisionSensor(clientID, visionSensor[i], sim.simx_opmode_blocking)
-            if state > -1:
-                if i == 1:
-                    sensorReading[i] = getAverageColour(aux[0]) > 0.45
-                else:
-                    sensorReading[i] = getAverageColour(aux[0]) < 0.25
+        returnBool, state, aux = sim.simxReadVisionSensor(clientID, visionSensor[1], sim.simx_opmode_blocking)
+        if state > -1:
+            sensorReading[1] = getAverageColour(aux[0]) > 0.45
 
         # If sensorReading[1] is True, then that means we have detected snow, let's get the handle from Proximity sensor
         if sensorReading[1]:
@@ -199,7 +195,7 @@ if clientID!=-1:
                         nextCheckPoint = nextCheckPoint + checkPointIndex
                         currentState = MOVESTRAIGHT
                     elif nextCheckPoint == 3.0:
-                        print("Got to the third checkpoint, gonna stop")
+                        print("Got to the third checkpoint, gonna u turn")
                         #nextCheckPoint = nextCheckPoint + checkPointIndex
                         currentState = UTURNLEFT
                 elif robotHeading == SOUTH:
@@ -270,20 +266,20 @@ if clientID!=-1:
             # Use theta value to turn the Robot to the left
             # Initially turn 90 degrees and stop. 
             if theta <= 90 and theta > 25:
-                rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 9
+                rightV = NOMINAL_VELOCITY / 3
+                leftV = -NOMINAL_VELOCITY / 4
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif theta <= 25 and theta > 0:
-                rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 9
+                rightV = NOMINAL_VELOCITY / 3
+                leftV = -NOMINAL_VELOCITY / 4
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif theta > -45 and theta <= 0:
-                rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 9
+                rightV = NOMINAL_VELOCITY / 3
+                leftV = -NOMINAL_VELOCITY / 4
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
@@ -311,14 +307,14 @@ if clientID!=-1:
                     robotNextTurn = RIGHT
                     currentState = STANDBY
                 elif not uturnComplete:
-                    rightV = NOMINAL_VELOCITY / 8
-                    leftV = -NOMINAL_VELOCITY / 9
+                    rightV = NOMINAL_VELOCITY / 3
+                    leftV = -NOMINAL_VELOCITY / 4
                     leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                     rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             else: 
-                rightV = NOMINAL_VELOCITY / 8
-                leftV = -NOMINAL_VELOCITY / 9
+                rightV = NOMINAL_VELOCITY / 3
+                leftV = -NOMINAL_VELOCITY / 4
                 leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
@@ -402,23 +398,40 @@ if clientID!=-1:
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif not detectionState_R:
-                if x1 >= headingXcoordinate:
-                    rightV = NOMINAL_VELOCITY / 2
-                    leftV = NOMINAL_VELOCITY
-                    leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
-                    rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
-
-                else:
-                    if x2 <= headingXcoordinate2:
-                        print("x1: %s, x2: %s" % (x1, x2))
-                        if(abs(x1-x2) <= 0.01):
-                            avoidanceInit = True
-                            currentState = MOVESTRAIGHT
-                        rightV = NOMINAL_VELOCITY 
-                        leftV = 0
+                if robotHeading == NORTH:
+                    if x1 >= headingXcoordinate:
+                        rightV = NOMINAL_VELOCITY / 2
+                        leftV = NOMINAL_VELOCITY
                         leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                         rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
-                        
+
+                    else:
+                        if x2 <= headingXcoordinate2:
+                            print("x1: %s, x2: %s" % (x1, x2))
+                            if(abs(x1-x2) <= 0.01):
+                                avoidanceInit = True
+                                currentState = MOVESTRAIGHT
+                            rightV = NOMINAL_VELOCITY 
+                            leftV = 0
+                            leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                            rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                elif robotHeading == SOUTH:
+                    if x1 <= headingXcoordinate:
+                        rightV = NOMINAL_VELOCITY / 2
+                        leftV = NOMINAL_VELOCITY
+                        leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                        rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+                    else:
+                        if x2 >= headingXcoordinate2:
+                            print("x1: %s, x2: %s" % (x1, x2))
+                            if(abs(x1-x2) <= 0.01):
+                                avoidanceInit = True
+                                currentState = MOVESTRAIGHT
+                            rightV = NOMINAL_VELOCITY
+                            leftV = 0
+                            leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                            rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
             
         elif currentState == AVOIDRIGHT:
             if detectionState_L:
@@ -432,14 +445,33 @@ if clientID!=-1:
                 rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
             elif not detectionState_L:
-                if x1 >= headingXcoordinate:
-                    rightV = NOMINAL_VELOCITY 
-                    leftV = NOMINAL_VELOCITY / 2
-                    leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
-                    rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                if robotHeading == NORTH:
+                    if x1 <= headingXcoordinate:
+                        rightV = NOMINAL_VELOCITY 
+                        leftV = NOMINAL_VELOCITY / 2
+                        leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                        rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
+                    else:
+                        if x2 >= headingXcoordinate2:
+                            print("x1: %s, x2: %s" % (x1, x2))
+                            if(abs(x1-x2) <= 0.01):
+                                avoidanceInit = True
+                                currentState = MOVESTRAIGHT
+                            rightV = 0
+                            leftV = NOMINAL_VELOCITY 
+                            leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                            rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+                
+                elif robotHeading == SOUTH:
+                    if x1 >= headingXcoordinate:
+                        rightV = NOMINAL_VELOCITY 
+                        leftV = NOMINAL_VELOCITY / 2
+                        leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
+                        rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
 
                 else:
-                    if x2 >= headingXcoordinate2:
+                    if x2 <= headingXcoordinate2:
                         print("x1: %s, x2: %s" % (x1, x2))
                         if(abs(x1-x2) <= 0.01):
                             avoidanceInit = True
@@ -448,6 +480,7 @@ if clientID!=-1:
                         leftV = NOMINAL_VELOCITY 
                         leftSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, leftJoint, leftV, sim.simx_opmode_blocking)
                         rightSensorReturnCode = sim.simxSetJointTargetVelocity(clientID, rightJoint, rightV, sim.simx_opmode_blocking)
+
 
         else:
             currentState = STOP
